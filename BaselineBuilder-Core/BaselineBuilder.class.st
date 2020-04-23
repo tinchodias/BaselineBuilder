@@ -179,11 +179,13 @@ BaselineBuilder >> sourceForExternalProject: aString [
 		format: {
 			self selectorForExternalProject: aString.
 			aString asString printString.
-			'' printString }
+			'github://USER_NAME/PROJECT_NAME:COMMITISH/SRC_DIRECTORY' printString }
 ]
 
 { #category : #private }
 BaselineBuilder >> sourceForExternalProjectDeclarations [
+	externalProjectNames ifEmpty: [ ^'' ].
+
 	^ String streamContents: [ :stream |
 		stream cr; tab; tab; tab; << 'self'; cr.
 		externalProjectNames sorted
