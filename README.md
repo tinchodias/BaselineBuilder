@@ -1,7 +1,8 @@
-# pharo-metacello-baseline-builder
+# Pharo Metacello baseline builder
+
 Fastly create a BaselineOf for your new Pharo project.
 
-## Scenario & How to use it
+## Example of use
 
 You started to code `XYZ`, a new project in Pharo that has several packages such as `XYZ-Core`, `XYZ-Examples` and `XYZ-Tests`.
 The project needs other ("external") projects that you loaded via Metacello during the coding session: [Roassal3](https://github.com/ObjectProfile/Roassal3) and [Chalten](https://github.com/ba-st/Chalten). 
@@ -29,16 +30,16 @@ BaselineOf subclass: #BaselineOfXYZDraft
 ~~~
 
 The class still needs some tasks to be ready:
-* Rename the class without the 'Draft' suffix.
+* Rename the class without the `Draft` suffix.
 * For each external project you will need to fill the url and tweak a bit (e.g. add a `loads: #full` to choose a specific baseline group). 
 * Potentially, add you own package groups.
 
 Finally, you just need to add the new `BaselineOfXYZ` package and commit.
 
 
-# Installation
+## Installation
 
-Evaluate the following script in a Pharo 8 or 9:
+Evaluate the following script in a Pharo (7, 8 or 9 should work):
 
 ~~~Smalltalk
 Metacello new
