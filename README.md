@@ -1,32 +1,39 @@
 # pharo-metacello-baseline-builder
 Create a Metacello Baselines from scratch on your new project.
 
-## How to use it
+## Scenario & How to use it
 
-You started to code a new project, you loaded external projects via Metacello each time you needed one, and everything looks good to export and publish the code.
-You will create a git repository, create the project meta-data using Iceberg, add the packages to the repository. 
-Everything fine for the moment, but you also to create a Metacello Baseline to ease installation in new Pharo images.
-This builder helps you to new subclass of `BaselineOf` with methods that declare the internal and external dependencies of your packages.
+You started to code `XYZ`, a new project in Pharo that has several packages such as `XYZ-Core`, `XYZ-Examples` and `XYZ-Tests`.
+The project needs other ("external") projects that you loaded via Metacello during the coding session: [Roassal3](https://github.com/ObjectProfile/Roassal3) and [Chalten](https://github.com/ba-st/Chalten). 
+Everything looks good enough to be exported out of the current Pharo image.
+You created a git repository, Iceberg helped you create the `.project` meta-data file, and you selected the `XYZ-*` packages to the repository and finally commited them. 
 
+Now, you want to create a first `BaselineOfXYZ` to automate the installation in new Pharo images.
+It will be a new subclass of `BaselineOf` with some methods that declare the *internal* dependencies (between your `XYZ-*` packages), and the *external* dependencies (with other projects).
+
+This is the moment where this builder will help you. Evaluate in a workspace:
 ~~~Smalltalk
 BaselineBuilder new
-		projectName: 'Iceberg';
-		externalProjectNames: #(LibGit);
-		build;
-		browseBuiltBaselineClass.
+	projectName: 'XYZ';
+	externalProjectNames: #(Roassal3 Tealight);
+	build;
+	browseBuiltBaselineClass.
 ~~~
 
-The result with be a browser open on this new class:
-
+You get a browser on this new class:
 ~~~Smalltalk
-BaselineOf subclass: #BaselineOfIcebergDraft
+BaselineOf subclass: #BaselineOfXYZDraft
 	instanceVariableNames: ''
 	classVariableNames: ''
-	package: 'BaselineOfIceberg'
+	package: 'BaselineOfXYZ'
 ~~~
 
-This is a template where you still need to fill urls. 
-Note you will have to rename the class without the 'Draft' suffix before committing it.
+The class still needs some tasks to be ready:
+* Rename the class without the 'Draft' suffix.
+* For each external project you will need to fill the url and tweak a bit (e.g. add a `loads: #full` to choose a specific baseline group). 
+* Potentially, add you own package groups.
+
+Finally, you just need to add the new `BaselineOfXYZ` package and commit.
 
 
 # Installation
