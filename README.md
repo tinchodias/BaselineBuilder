@@ -1,6 +1,6 @@
 # Pharo Metacello baseline builder
 
-Fastly create a BaselineOf for your new Pharo project.
+Fastly create a `BaselineOf` for your new Pharo project.
 
 ## Example of use
 
