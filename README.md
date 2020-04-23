@@ -1,5 +1,5 @@
 # pharo-metacello-baseline-builder
-Create a Metacello Baselines from scratch on your new project.
+Fastly create a BaselineOf for your new Pharo project.
 
 ## Scenario & How to use it
 
@@ -15,7 +15,7 @@ This is the moment where this builder will help you. Evaluate in a workspace:
 ~~~Smalltalk
 BaselineBuilder new
 	projectName: 'XYZ';
-	externalProjectNames: #(Roassal3 Tealight);
+	externalProjectNames: #(Roassal3 Chalten);
 	build;
 	browseBuiltBaselineClass.
 ~~~
