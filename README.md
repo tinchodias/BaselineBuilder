@@ -1,4 +1,5 @@
-# Pharo Metacello baseline builder
+# Pharo Metacello baseline builder [![Build Status](https://travis-ci.org/tinchodias/pharo-metacello-baseline-builder.png)](http://travis-ci.org/tinchodias/pharo-metacello-baseline-builder)
+
 
 Fastly create a `BaselineOf` for your new Pharo project.
 
