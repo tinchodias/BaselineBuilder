@@ -1,7 +1,8 @@
-# Pharo Metacello baseline builder [![Build Status](https://travis-ci.org/tinchodias/pharo-metacello-baseline-builder.png)](http://travis-ci.org/tinchodias/pharo-metacello-baseline-builder)
+# Pharo Metacello baseline builder
 
+[![Build Status](https://travis-ci.org/tinchodias/pharo-metacello-baseline-builder.png)](http://travis-ci.org/tinchodias/pharo-metacello-baseline-builder)
 
-Fastly create a `BaselineOf` for your new Pharo project. You specify a project name (the prefix of your packages) and a list of external project names (the prefix of packages in which your packages depend). The builder performs a static analysis of your code using [Christophe's `Tool-DependencyAnalyser`](https://github.com/demarey/) to stablish the internal and external relations between packages, and generates a boilerplate `BaselineOf` for you.
+Fastly create a `BaselineOf` for your new Pharo project. You specify a project name (the prefix of your packages) and a list of external project names (the prefix of packages in which your packages depend). The builder analyses your code to stablish the internal and external relations between packages, and generates a boilerplate `BaselineOf` for you. The package relations are stablished using the static analysis provided by [Christophe Demarey's](https://github.com/demarey/) `Tool-DependencyAnalyser`, which comes with Pharo.
 
 ## Example of use
 
