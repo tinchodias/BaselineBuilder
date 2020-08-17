@@ -38,7 +38,8 @@ The class still needs some tasks to be ready:
 
 Finally, you just need to add the new `BaselineOfXYZ` package and commit.
 
-
+**Note**: By default, the project name is a taken as a prefix of the internal package names. If it's not the case, there are `internalPackageNamesPrefix:` and `internalPackageNamesRegex:` to specify something else.
+ 
 ## Installation
 
 Evaluate the following script in a Pharo (7, 8 or 9 should work):
