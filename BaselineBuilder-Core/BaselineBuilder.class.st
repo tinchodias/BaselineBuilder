@@ -7,7 +7,8 @@ Class {
 		'relationGraph',
 		'baselineClass',
 		'packageRequirements',
-		'externalProjectNames'
+		'externalProjectNames',
+		'internalPackageNamesRegex'
 	],
 	#category : #'BaselineBuilder-Core'
 }
@@ -106,9 +107,19 @@ BaselineBuilder >> externalProjectNames: aCollectionOfStrings [
 	externalProjectNames := aCollectionOfStrings
 ]
 
+{ #category : #accessing }
+BaselineBuilder >> internalPackageNamesPrefix: aString [ 
+	internalPackageNamesRegex := (aString, '.*') asRegex
+]
+
+{ #category : #accessing }
+BaselineBuilder >> internalPackageNamesRegex: aRegex [
+	internalPackageNamesRegex := aRegex
+]
+
 { #category : #private }
 BaselineBuilder >> isInternal: aPackageName [
-	^ aPackageName beginsWith: projectName
+	^ internalPackageNamesRegex matches: aPackageName
 ]
 
 { #category : #private }
@@ -145,7 +156,8 @@ BaselineBuilder >> processDependencies [
 
 { #category : #accessing }
 BaselineBuilder >> projectName: aString [ 
-	projectName := aString
+	projectName := aString.
+	self internalPackageNamesPrefix: aString.
 ]
 
 { #category : #private }
