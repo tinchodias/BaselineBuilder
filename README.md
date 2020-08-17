@@ -4,6 +4,17 @@
 
 Fastly create a `BaselineOf` for your new Pharo project. You specify a project name (the prefix of your packages) and a list of external project names (the prefix of packages in which your packages depend). The builder analyses your code to stablish the internal and external relations between packages, and generates a boilerplate `BaselineOf` for you. The package relations are stablished using the static analysis provided by [Christophe Demarey's](https://github.com/demarey/) `Tool-DependencyAnalyser`, which comes with Pharo.
 
+## Installation
+
+Evaluate the following script in a Pharo (7, 8 or 9 should work):
+
+~~~Smalltalk
+Metacello new
+    baseline: 'BaselineBuilder';
+    repository: 'github://tinchodias/pharo-metacello-baseline-builder';
+    load.
+~~~
+
 ## Example of use
 
 You started to code `XYZ`, a new project in Pharo that has several packages such as `XYZ-Core`, `XYZ-Examples` and `XYZ-Tests`.
@@ -39,16 +50,3 @@ The class still needs some tasks to be ready:
 Finally, you just need to add the new `BaselineOfXYZ` package and commit.
 
 **Note**: By default, the project name is a taken as a prefix of the internal package names. If it's not the case, there are `internalPackageNamesPrefix:` and `internalPackageNamesRegex:` to specify something else.
- 
-## Installation
-
-Evaluate the following script in a Pharo (7, 8 or 9 should work):
-
-~~~Smalltalk
-Metacello new
-    baseline: 'BaselineBuilder';
-    repository: 'github://tinchodias/pharo-metacello-baseline-builder';
-    load.
-~~~
-
-
