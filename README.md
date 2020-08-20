@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tinchodias/pharo-metacello-baseline-builder.png)](http://travis-ci.org/tinchodias/pharo-metacello-baseline-builder)
 
-Fastly create a `BaselineOf` for your new Pharo project. You specify a project name (the prefix of your packages) and a list of external project names (the prefix of packages in which your packages depend). The builder analyses your code to stablish the internal and external relations between packages, and generates a boilerplate `BaselineOf` for you. The package relations are stablished using the static analysis provided by [Christophe Demarey's](https://github.com/demarey/) `Tool-DependencyAnalyser`, which comes with Pharo.
+Fastly create a `BaselineOf` for your new Pharo project. You specify a project name (the prefix of your packages) and a list of external project names (the prefix of packages in which your packages depend). The builder analyses your code to establish the internal and external relations between packages, and generates a boilerplate `BaselineOf` for you. The package relations are established using the static analysis provided by [Christophe Demarey's](https://github.com/demarey/) `Tool-DependencyAnalyser`, which comes with Pharo.
 
 ## Installation
 
@@ -45,7 +45,7 @@ BaselineOf subclass: #BaselineOfXYZDraft
 The class still needs some tasks to be ready:
 * Rename the class without the `Draft` suffix.
 * For each external project you will need to fill the url and tweak a bit (e.g. add a `loads: #full` to choose a specific baseline group). 
-* Potentially, add you own package groups nad other possible customizations.
+* Potentially, add you own package groups and other possible customizations.
 
 Finally, you just need to add the new `BaselineOfXYZ` package and commit.
 
