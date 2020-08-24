@@ -109,7 +109,7 @@ BaselineBuilder >> externalProjectNames: aCollectionOfStrings [
 
 { #category : #accessing }
 BaselineBuilder >> internalPackageNamesPrefix: aString [ 
-	internalPackageNamesRegex := (aString, '.*') asRegex
+	self internalPackageNamesRegex: (aString, '.*') asRegex
 ]
 
 { #category : #accessing }
