@@ -107,6 +107,34 @@ BaselineBuilder >> externalProjectNames: aCollectionOfStrings [
 	externalProjectNames := aCollectionOfStrings
 ]
 
+{ #category : #private }
+BaselineBuilder >> guessLocationForPackageNamed: aString [
+
+	IceRepository registry
+		detect: [ :each | each includesPackageNamed: aString ]
+		ifFound: [ :iceRepository |
+			iceRepository remotes ifNotEmpty: [ :remotes |
+				^ self guessLocationFromRemote: remotes first ] ].
+	
+	^ 'TYPE://USER_NAME/PROJECT_NAME:COMMITISH/SRC_DIRECTORY'
+
+]
+
+{ #category : #private }
+BaselineBuilder >> guessLocationFromRemote: anIceRemote [
+
+	| type |
+	type := anIceRemote host = 'github.com'
+		        ifTrue: [ 'github' ]
+		        ifFalse: [ 'TYPE' ].
+
+	^ '{1}://{2}/{3}:COMMITISH/{4}' format: { 
+			  type.
+			  anIceRemote owner.
+			  anIceRemote projectName.
+			  anIceRemote localRepository project sourceDirectory }
+]
+
 { #category : #accessing }
 BaselineBuilder >> internalPackageNamesPrefix: aString [ 
 	self internalPackageNamesRegex: (aString, '.*') asRegex
@@ -184,6 +212,7 @@ BaselineBuilder >> sourceForBaselineMethod [
 
 { #category : #private }
 BaselineBuilder >> sourceForExternalProject: aString [
+
 	^ '{1} spec
 	spec
 		baseline: {2}
@@ -191,7 +220,7 @@ BaselineBuilder >> sourceForExternalProject: aString [
 		format: {
 			self selectorForExternalProject: aString.
 			aString asString printString.
-			'github://USER_NAME/PROJECT_NAME:COMMITISH/SRC_DIRECTORY' printString }
+			(self guessLocationForPackageNamed: aString) printString }
 ]
 
 { #category : #private }
