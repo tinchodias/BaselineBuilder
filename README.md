@@ -51,5 +51,13 @@ Finally, you just need to add the new `BaselineOfXYZ` package and commit.
 
 **Note**: By default, the project name is a taken as a prefix of the internal package names. If it's not the case, there are `internalPackageNamesPrefix:` and `internalPackageNamesRegex:` to specify something else.
 
+Additionally, the builder can help by creating a markdown fragment to be appended to the README:
+
+~~~Smalltalk
+(BaselineBuilder new
+	projectName: 'XYZ';
+	installMarkdownWith: 'github://MyUserName/XYZ') inspect
+~~~
+
 ## License
 The code is licensed under [MIT](LICENSE).
