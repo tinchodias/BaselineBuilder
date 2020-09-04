@@ -39,3 +39,16 @@ BaselineBuilderTest >> test02OneExternalProject [
 	self assert: builtClass isClass.
 	self assert: builtClass selectors sorted equals: #(baseline: declareLibGitOn:).
 ]
+
+{ #category : #test }
+BaselineBuilderTest >> testInstallMarkdownWith [
+
+	| markdown |
+	builder := BaselineBuilder new
+		projectName: 'Iceberg';
+		yourself.
+	markdown := builder installMarkdownWith: '123_url_456'.
+	
+	self assert: markdown isString.
+	self assert:( markdown includesSubstring: '123_url_456')
+]

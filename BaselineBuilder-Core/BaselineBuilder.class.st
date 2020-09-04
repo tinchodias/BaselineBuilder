@@ -136,6 +136,34 @@ BaselineBuilder >> guessLocationFromRemote: anIceRemote [
 ]
 
 { #category : #accessing }
+BaselineBuilder >> installMarkdownWith: urlString [
+
+	^ '
+## Installation
+
+Evaluate in Pharo:
+
+```Smalltalk
+{1}
+```
+' format: { 
+	self installScriptWith: urlString }
+]
+
+{ #category : #accessing }
+BaselineBuilder >> installScriptWith: urlString [
+
+	^ '
+Metacello new
+	baseline: ''{1}'';
+	repository: ''{2}'';
+	load
+' format: { 
+	  projectName.
+	  urlString }
+]
+
+{ #category : #accessing }
 BaselineBuilder >> internalPackageNamesPrefix: aString [ 
 	self internalPackageNamesRegex: (aString, '.*') asRegex
 ]
