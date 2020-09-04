@@ -66,6 +66,14 @@ BaselineBuilder >> build [
 	self createBaselineClass.
 ]
 
+{ #category : #accessing }
+BaselineBuilder >> copyToClipboardInstallMarkdownWith: urlString [
+
+	Clipboard
+		clipboardText: (self installMarkdownWith: urlString)
+		informing: 'Markdown fragment copied to clipboard'
+]
+
 { #category : #private }
 BaselineBuilder >> createBaselineClass [
 	baselineClass := BaselineOf
