@@ -17,6 +17,8 @@ Metacello new
 
 ## Example of use
 
+### Your new XYZ project
+
 You started to code `XYZ`, a new project in Pharo that has several packages such as `XYZ-Core`, `XYZ-Examples` and `XYZ-Tests`.
 The project needs other ("external") projects that you loaded via Metacello during the coding session: [Roassal3](https://github.com/ObjectProfile/Roassal3) and [Chalten](https://github.com/ba-st/Chalten). 
 Everything looks good enough to be exported out of the current Pharo image.
@@ -25,6 +27,7 @@ You created a git repository, Iceberg helped you create the `.project` meta-data
 Now, you want to create a first `BaselineOfXYZ` to automate the installation in new Pharo images.
 It will be a new subclass of `BaselineOf` with some methods that declare the *internal* dependencies (between your `XYZ-*` packages), and the *external* dependencies (with other projects).
 
+### Create BaselineOfXYZ
 This is the moment where this builder will help you. Evaluate in a workspace:
 ~~~Smalltalk
 BaselineBuilder new
@@ -51,13 +54,17 @@ Finally, you just need to add the new `BaselineOfXYZ` package and commit.
 
 **Note**: By default, the project name is a taken as a prefix of the internal package names. If it's not the case, there are `internalPackageNamesPrefix:` and `internalPackageNamesRegex:` to specify something else.
 
-Additionally, the builder can help by creating a markdown fragment to be appended to the README:
+### Add install subsection to your README
+
+The builder can help by creating a markdown fragment to be appended to the project README:
 
 ~~~Smalltalk
-(BaselineBuilder new
+BaselineBuilder new
 	projectName: 'XYZ';
-	installMarkdownWith: 'github://MyUserName/XYZ') inspect
+	copyToClipboardInstallMarkdownWith: 'github://MyUserName/XYZ'
 ~~~
+
+Then, paste the clipboard contents at the end of your README file.
 
 ## License
 The code is licensed under [MIT](LICENSE).
