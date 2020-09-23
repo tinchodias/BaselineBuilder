@@ -1,0 +1,19 @@
+name: CI
+
+on: push
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        smalltalk: [ Pharo64-9.0, Pharo64-8.0 ]
+    runs-on: ubuntu-latest
+    name: ${{ matrix.smalltalk }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hpi-swa/setup-smalltalkCI@v1
+        with:
+          smalltalk-version: ${{ matrix.smalltalk }}
+      - run: smalltalkci -s ${{ matrix.smalltalk }}
+        shell: bash
+        timeout-minutes: 15
