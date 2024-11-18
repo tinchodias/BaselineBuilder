@@ -6,7 +6,7 @@ jobs:
   build:
     strategy:
       matrix:
-        smalltalk: [ Pharo64-9.0, Pharo64-8.0 ]
+        smalltalk: [ Pharo64-12, Pharo64-11, Pharo64-10, Pharo64-9.0, Pharo64-8.0 ]
     runs-on: ubuntu-latest
     name: ${{ matrix.smalltalk }}
     steps:
