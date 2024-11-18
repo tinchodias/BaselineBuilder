@@ -1,18 +1,22 @@
 Class {
-	#name : #BaselineBuilderTest,
-	#superclass : #TestCase,
+	#name : 'BaselineBuilderTest',
+	#superclass : 'TestCase',
 	#instVars : [
 		'builder'
 	],
-	#category : #'BaselineBuilder-Tests'
+	#category : 'BaselineBuilder-Tests',
+	#package : 'BaselineBuilder-Tests'
 }
 
-{ #category : #tests }
+{ #category : 'running' }
 BaselineBuilderTest >> tearDown [
-	builder baselineClass ifNotNil: #removeFromSystem
+
+	builder baselineClass ifNotNil: [ :c | c removeFromSystem ].
+	
+	super tearDown
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 BaselineBuilderTest >> test01NoExternalProject [
 	| builtClass |
 	builder := BaselineBuilder new
@@ -26,7 +30,7 @@ BaselineBuilderTest >> test01NoExternalProject [
 	self assert: builtClass selectors sorted equals: #(baseline:).
 ]
 
-{ #category : #tests }
+{ #category : 'tests' }
 BaselineBuilderTest >> test02OneExternalProject [
 	| builtClass |
 	builder := BaselineBuilder new
@@ -40,7 +44,7 @@ BaselineBuilderTest >> test02OneExternalProject [
 	self assert: builtClass selectors sorted equals: #(baseline: declareLibGitOn:).
 ]
 
-{ #category : #test }
+{ #category : 'tests' }
 BaselineBuilderTest >> testInstallMarkdownWith [
 
 	| markdown |
