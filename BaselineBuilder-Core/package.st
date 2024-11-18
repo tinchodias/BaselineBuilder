@@ -1,1 +1,1 @@
-Package { #name : #'BaselineBuilder-Core' }
+Package { #name : 'BaselineBuilder-Core' }

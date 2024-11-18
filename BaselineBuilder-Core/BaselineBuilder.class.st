@@ -1,6 +1,6 @@
 Class {
-	#name : #BaselineBuilder,
-	#superclass : #Object,
+	#name : 'BaselineBuilder',
+	#superclass : 'Object',
 	#instVars : [
 		'projectName',
 		'packageNames',
@@ -10,10 +10,11 @@ Class {
 		'externalProjectNames',
 		'internalPackageNamesRegex'
 	],
-	#category : #'BaselineBuilder-Core'
+	#category : 'BaselineBuilder-Core',
+	#package : 'BaselineBuilder-Core'
 }
 
-{ #category : #examples }
+{ #category : 'examples' }
 BaselineBuilder class >> example0 [
 	self new
 		projectName: 'BaselineBuilder';
@@ -22,7 +23,7 @@ BaselineBuilder class >> example0 [
 		browseBuiltBaselineClass
 ]
 
-{ #category : #examples }
+{ #category : 'examples' }
 BaselineBuilder class >> example1 [
 	self new
 		projectName: 'MongoClientMonitor';
@@ -31,7 +32,7 @@ BaselineBuilder class >> example1 [
 		browseBuiltBaselineClass
 ]
 
-{ #category : #examples }
+{ #category : 'examples' }
 BaselineBuilder class >> example2 [
 	self new
 		projectName: 'Iceberg';
@@ -40,33 +41,33 @@ BaselineBuilder class >> example2 [
 		browseBuiltBaselineClass
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> baselineClass [
 	^ baselineClass
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> baselineClassName [
 	^ self baselinePackageName, 'Draft'
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> baselinePackageName [
 	^ 'BaselineOf', projectName
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> browseBuiltBaselineClass [
 	baselineClass browse
 ]
 
-{ #category : #building }
+{ #category : 'building' }
 BaselineBuilder >> build [
 	self processDependencies.
 	self createBaselineClass.
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> copyToClipboardInstallMarkdownWith: urlString [
 
 	Clipboard
@@ -74,14 +75,14 @@ BaselineBuilder >> copyToClipboardInstallMarkdownWith: urlString [
 		informing: 'Markdown fragment copied to clipboard'
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> createBaselineClass [
-	baselineClass := BaselineOf
-		subclass: self baselineClassName asSymbol
-		instanceVariableNames: ''
-		classVariableNames: ''
-		package: self baselinePackageName asString.
-		
+
+	baselineClass :=
+		SystemVersion current major < 12
+			ifTrue: [ self newBaselineClassBeforePharo12 ]
+			ifFalse: [ self newBaselineClassSincePharo12 ].
+
 	baselineClass
 		compile: self sourceForBaselineMethod
 		classified: #baseline.
@@ -92,7 +93,7 @@ BaselineBuilder >> createBaselineClass [
 			classified: #'external projects' ]
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> ensureRequire: source to: target [
 	| sourcePackageName targetPackageName |
 	self
@@ -110,12 +111,12 @@ BaselineBuilder >> ensureRequire: source to: target [
 	(packageRequirements at: sourcePackageName) add: targetPackageName
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> externalProjectNames: aCollectionOfStrings [
 	externalProjectNames := aCollectionOfStrings
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> guessLocationForPackageNamed: aString [
 
 	IceRepository registry
@@ -128,7 +129,7 @@ BaselineBuilder >> guessLocationForPackageNamed: aString [
 
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> guessLocationFromRemote: anIceRemote [
 
 	| type |
@@ -143,7 +144,7 @@ BaselineBuilder >> guessLocationFromRemote: anIceRemote [
 			  anIceRemote localRepository project sourceDirectory }
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> installMarkdownWith: urlString [
 
 	^ '
@@ -158,7 +159,7 @@ Evaluate in Pharo:
 	self installScriptWith: urlString }
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> installScriptWith: urlString [
 
 	^ '
@@ -171,22 +172,45 @@ Metacello new
 	  urlString }
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> internalPackageNamesPrefix: aString [ 
 	self internalPackageNamesRegex: (aString, '.*') asRegex
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> internalPackageNamesRegex: aRegex [
 	internalPackageNamesRegex := aRegex
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> isInternal: aPackageName [
 	^ internalPackageNamesRegex matches: aPackageName
 ]
 
-{ #category : #private }
+{ #category : 'private' }
+BaselineBuilder >> newBaselineClassBeforePharo12 [
+
+	^ BaselineOf
+		subclass: self baselineClassName asSymbol
+		instanceVariableNames: ''
+		classVariableNames: ''
+		package: self baselinePackageName asString
+]
+
+{ #category : 'private' }
+BaselineBuilder >> newBaselineClassSincePharo12 [
+
+	^ BaselineOf classInstaller make: [ :builder |
+		  builder
+			  superclass: BaselineOf;
+			  name: self baselineClassName asSymbol;
+			  slotsFromString: '';
+			  sharedVariablesFromString: '';
+			  package: self baselinePackageName asString;
+			  environment: BaselineOf environment ]
+]
+
+{ #category : 'private' }
 BaselineBuilder >> parseTarget: aPackageName ifInternal: internalPackageBlock ifExternalProject: externalProjectBlock ifNone: noneBlock [
 
 	(self isInternal: aPackageName) ifTrue: [
@@ -199,10 +223,11 @@ BaselineBuilder >> parseTarget: aPackageName ifInternal: internalPackageBlock if
 	^ noneBlock value
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> processDependencies [
+
 	packageNames := Array streamContents: [ :stream |
-		 RPackageOrganizer default packageNamesDo: [ :each |
+		self class packageOrganizer packageNamesDo: [ :each |
 			(self isInternal: each) ifTrue: [ 
 				stream nextPut: each asString ] ] ].
 
@@ -218,23 +243,23 @@ BaselineBuilder >> processDependencies [
 
 ]
 
-{ #category : #accessing }
+{ #category : 'accessing' }
 BaselineBuilder >> projectName: aString [ 
 	projectName := aString.
 	self internalPackageNamesPrefix: aString.
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> selectorForBaselineMethod [
 	^ 'baseline:'
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> selectorForExternalProject: aString [
 	^ 'declare{1}On:' format: {aString}
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> sourceForBaselineMethod [
 	^ '{1} spec
 	<baseline>
@@ -246,7 +271,7 @@ BaselineBuilder >> sourceForBaselineMethod [
 		self sourceForPackageDeclarations }
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> sourceForExternalProject: aString [
 
 	^ '{1} spec
@@ -259,7 +284,7 @@ BaselineBuilder >> sourceForExternalProject: aString [
 			(self guessLocationForPackageNamed: aString) printString }
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> sourceForExternalProjectDeclarations [
 	externalProjectNames ifEmpty: [ ^'' ].
 
@@ -274,7 +299,7 @@ BaselineBuilder >> sourceForExternalProjectDeclarations [
 		]
 ]
 
-{ #category : #private }
+{ #category : 'private' }
 BaselineBuilder >> sourceForPackageDeclarations [
 	^ String streamContents: [ :stream |
 		stream cr; tab; tab; tab; << 'spec'; cr.
