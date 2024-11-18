@@ -227,7 +227,7 @@ BaselineBuilder >> parseTarget: aPackageName ifInternal: internalPackageBlock if
 BaselineBuilder >> processDependencies [
 
 	packageNames := Array streamContents: [ :stream |
-		self packageOrganizer packageNamesDo: [ :each |
+		self class packageOrganizer packageNamesDo: [ :each |
 			(self isInternal: each) ifTrue: [ 
 				stream nextPut: each asString ] ] ].
 
