@@ -11,7 +11,7 @@ Class {
 { #category : 'running' }
 BaselineBuilderTest >> tearDown [
 
-	builder ifNil: [
+	builder ifNotNil: [
 		builder baselineClass ifNotNil: [ 
 			builder baselineClass removeFromSystem ] ].
 	
