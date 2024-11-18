@@ -20,6 +20,7 @@ BaselineBuilderTest >> tearDown [
 
 { #category : 'tests' }
 BaselineBuilderTest >> test01NoExternalProject [
+
 	| builtClass |
 	builder := BaselineBuilder new
 		projectName: 'Iceberg';
@@ -29,11 +30,12 @@ BaselineBuilderTest >> test01NoExternalProject [
 
 	builtClass := builder baselineClass.
 	self assert: builtClass isClass.
-	self assert: builtClass selectors sorted equals: #(baseline:).
+	self assert: builtClass selectors sorted equals: #(baseline:)
 ]
 
 { #category : 'tests' }
 BaselineBuilderTest >> test02OneExternalProject [
+
 	| builtClass |
 	builder := BaselineBuilder new
 		projectName: 'Iceberg';
@@ -43,7 +45,7 @@ BaselineBuilderTest >> test02OneExternalProject [
 	
 	builtClass := builder baselineClass.
 	self assert: builtClass isClass.
-	self assert: builtClass selectors sorted equals: #(baseline: declareLibGitOn:).
+	self assert: builtClass selectors sorted equals: #(baseline: declareLibGitOn:)
 ]
 
 { #category : 'tests' }
@@ -55,6 +57,18 @@ BaselineBuilderTest >> testInstallMarkdownWith [
 		yourself.
 	markdown := builder installMarkdownWith: '123_url_456'.
 	
-	self assert: markdown isString.
-	self assert:( markdown includesSubstring: '123_url_456')
+	self assert: markdown equals: '
+## Installation
+
+Evaluate in Pharo:
+
+```Smalltalk
+
+Metacello new
+	baseline: ''Iceberg'';
+	repository: ''123_url_456'';
+	load
+
+```
+'
 ]
