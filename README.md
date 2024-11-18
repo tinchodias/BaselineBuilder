@@ -1,8 +1,8 @@
-# Metacello's BaselineOf Builder for Pharo
+# Baseline Builder for Pharo
 
 [![CI](https://github.com/tinchodias/BaselineBuilder/actions/workflows/main.yml/badge.svg)](https://github.com/tinchodias/BaselineBuilder/actions/workflows/main.yml)
 
-Fastly create a `BaselineOf` for your new [Pharo](https://pharo.org/) project. You specify a project name (the prefix of your packages) and a list of external project names (the prefix of packages in which your packages depend). The builder analyses your code to establish the internal and external relations between packages, and generates a boilerplate `BaselineOf` for you. The package relations are established using the static analysis provided by [Christophe Demarey's](https://github.com/demarey/) `Tool-DependencyAnalyser`, which comes with Pharo.
+Fastly create a `BaselineOf` for your new [Pharo](https://pharo.org/) project. You specify a project name (the prefix of your packages) and a list of external project names (the prefix of packages in which your packages depend). The builder analyses your code to establish the internal and external relations between packages, and generates a boilerplate `BaselineOf` for you. The package relations are established using the static analysis provided by Pharo's `Tool-DependencyAnalyser`.
 
 
 ## Example of use
@@ -51,7 +51,9 @@ BaselineBuilder new
 
 ## Troubleshooting
 
-By default, the project name is a taken as a prefix of the internal package names. If it's not the case, there are `internalPackageNamesPrefix:` and `internalPackageNamesRegex:` to specify something else.
+By default, the builder considers internal to any package prefixed by the project's name as a prefix (`XYZ-*` in the example). You need to customize the criteria when it's not the case. Builder's API provides `internalPackageNamesPrefix:` and `internalPackageNamesRegex:` to specify something else.
+
 
 ## License
+
 The code is licensed under [MIT](LICENSE).
