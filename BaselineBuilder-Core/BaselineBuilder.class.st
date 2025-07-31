@@ -278,7 +278,7 @@ BaselineBuilder >> processDependencies [
 	packageNames do: [ :each |
 		packageRequirements at: each asString put: Set new ].
 
-	relationGraph := DAPackageRelationGraph onPackagesNamed: packageNames.
+	relationGraph := StPackageRelationGraph onPackagesNamed: packageNames.
 	relationGraph build.
 	relationGraph packages do: [:aDAPackage |
 		aDAPackage dependencies do: [:each | 
