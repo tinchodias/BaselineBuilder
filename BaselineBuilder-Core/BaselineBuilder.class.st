@@ -96,7 +96,8 @@ BaselineBuilder >> baselineClassName [
 
 { #category : 'accessing' }
 BaselineBuilder >> baselinePackageName [
-	^ 'BaselineOf', projectName
+
+	^ 'BaselineOf', (projectName copyWithoutAll: '-')
 ]
 
 { #category : 'accessing' }
