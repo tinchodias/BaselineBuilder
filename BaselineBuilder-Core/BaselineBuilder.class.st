@@ -47,11 +47,14 @@ Class {
 	#instVars : [
 		'projectName',
 		'packageNames',
-		'relationGraph',
 		'baselineClass',
-		'packageRequirements',
-		'externalProjectNames',
-		'internalPackageNamesRegex'
+		'internalPackageNamesRegex',
+		'externalPackageNamePrefixes',
+		'packageRequirementsProcessed',
+		'baselineClassSuffix',
+		'primaryPackageRequirements',
+		'secondaryPackageRequirements',
+		'externalRequirements'
 	],
 	#category : 'BaselineBuilder-Core',
 	#package : 'BaselineBuilder-Core'
@@ -86,12 +89,20 @@ BaselineBuilder class >> example2 [
 
 { #category : 'accessing' }
 BaselineBuilder >> baselineClass [
+
 	^ baselineClass
 ]
 
 { #category : 'accessing' }
 BaselineBuilder >> baselineClassName [
-	^ self baselinePackageName, 'Draft'
+
+	^ self baselinePackageName, baselineClassSuffix
+]
+
+{ #category : 'accessing' }
+BaselineBuilder >> baselineClassSuffix: aString [
+
+	baselineClassSuffix := aString
 ]
 
 { #category : 'accessing' }
@@ -102,6 +113,7 @@ BaselineBuilder >> baselinePackageName [
 
 { #category : 'accessing' }
 BaselineBuilder >> browseBuiltBaselineClass [
+
 	baselineClass browse
 ]
 
@@ -122,42 +134,47 @@ BaselineBuilder >> copyToClipboardInstallMarkdownWith: urlString [
 { #category : 'private' }
 BaselineBuilder >> createBaselineClass [
 
-	baselineClass :=
-		SystemVersion current major < 12
-			ifTrue: [ self newBaselineClassBeforePharo12 ]
-			ifFalse: [ self newBaselineClassSincePharo12 ].
+	baselineClass := self newBaselineClass.
 
 	baselineClass
 		compile: self sourceForBaselineMethod
-		classified: #baseline.
+		classified: #baselines.
 
-	externalProjectNames do: [ :each |
+	externalPackageNamePrefixes do: [ :each |
 		baselineClass
 			compile: (self sourceForExternalProject: each)
 			classified: #'external projects' ]
 ]
 
 { #category : 'private' }
-BaselineBuilder >> ensureRequire: source to: target [
-	| sourcePackageName targetPackageName |
+BaselineBuilder >> ensureRequireDependency: aStPackageDependency [
+
+	| sourcePackageName |
+	sourcePackageName := aStPackageDependency source packageName asString.
+
 	self
-		parseTarget: target packageName
-		ifInternal: [ :name | targetPackageName := name ]
-		ifExternalProject: [ :name | targetPackageName := name ]
-		ifNone: [
-			('Discarding dependency: {1} -> {2}'
-				format: {
-					source packageName.
-					target packageName }) traceCr.
-			^ self ].
+		parseTarget: aStPackageDependency target packageName
+		ifInternal: [ :name |
+			((aStPackageDependency causesLoadingError
+				ifTrue: [ primaryPackageRequirements ]
+				ifFalse: [ secondaryPackageRequirements ]) at: sourcePackageName) add: name ]
+		ifExternalProject: [ :name |
+			(externalRequirements at: sourcePackageName) add: name ]
+		ifNone: [ ^ self ].
 	
-	sourcePackageName := source packageName asString.
-	(packageRequirements at: sourcePackageName) add: targetPackageName
+
+]
+
+{ #category : 'private' }
+BaselineBuilder >> externalBaselineNameFor: aPackageNamePrefix [
+
+	^ aPackageNamePrefix copyWithoutAll: '-'
 ]
 
 { #category : 'accessing' }
 BaselineBuilder >> externalProjectNames: aCollectionOfStrings [
-	externalProjectNames := aCollectionOfStrings
+
+	externalPackageNamePrefixes := aCollectionOfStrings
 ]
 
 { #category : 'private' }
@@ -186,6 +203,15 @@ BaselineBuilder >> guessLocationFromRemote: anIceRemote [
 			  anIceRemote owner.
 			  anIceRemote projectName.
 			  anIceRemote localRepository project sourceDirectory }
+]
+
+{ #category : 'initialization' }
+BaselineBuilder >> initialize [
+
+	super initialize.
+	
+	externalPackageNamePrefixes := #().
+	baselineClassSuffix := 'Draft'
 ]
 
 { #category : 'accessing' }
@@ -217,32 +243,25 @@ Metacello new
 ]
 
 { #category : 'accessing' }
-BaselineBuilder >> internalPackageNamesPrefix: aString [ 
-	self internalPackageNamesRegex: (aString, '.*') asRegex
+BaselineBuilder >> internalPackageNamesPrefix: aString [
+
+	self internalPackageNamesRegex: (aString , '.*') asRegex
 ]
 
 { #category : 'accessing' }
 BaselineBuilder >> internalPackageNamesRegex: aRegex [
+
 	internalPackageNamesRegex := aRegex
 ]
 
 { #category : 'private' }
 BaselineBuilder >> isInternal: aPackageName [
+
 	^ internalPackageNamesRegex matches: aPackageName
 ]
 
 { #category : 'private' }
-BaselineBuilder >> newBaselineClassBeforePharo12 [
-
-	^ BaselineOf
-		subclass: self baselineClassName asSymbol
-		instanceVariableNames: ''
-		classVariableNames: ''
-		package: self baselinePackageName asString
-]
-
-{ #category : 'private' }
-BaselineBuilder >> newBaselineClassSincePharo12 [
+BaselineBuilder >> newBaselineClass [
 
 	^ BaselineOf classInstaller make: [ :builder |
 		  builder
@@ -260,53 +279,117 @@ BaselineBuilder >> parseTarget: aPackageName ifInternal: internalPackageBlock if
 	(self isInternal: aPackageName) ifTrue: [
 		^ internalPackageBlock value: aPackageName asString ].
 
-	externalProjectNames do: [ :each |
+	externalPackageNamePrefixes do: [ :each |
 		(aPackageName beginsWith: each)
-			ifTrue: [ ^ externalProjectBlock value: each asString ] ].
+			ifTrue: [ ^ externalProjectBlock value: (self externalBaselineNameFor: each asString) ] ].
 
 	^ noneBlock value
 ]
 
-{ #category : 'accessing' }
+{ #category : 'private' }
+BaselineBuilder >> printRequirements: requirements on: stream [
+
+	stream cr; tab: 4; << 'with: [ spec requires: '.
+	(requirements sum: #size) < 50
+		ifTrue: [
+			"inline"
+			stream print: requirements; << ' ]' ]
+		ifFalse: [
+			"multiple lines"
+			stream << '#('.
+			requirements do: [ :eachRequirement |
+				stream cr; tab: 5; print: eachRequirement ].
+			stream << ') ]' ]
+]
+
+{ #category : 'private' }
 BaselineBuilder >> processDependencies [
 
+	| relationGraph |
 	packageNames := Array streamContents: [ :stream |
 		self class packageOrganizer packageNamesDo: [ :each |
 			(self isInternal: each) ifTrue: [ 
 				stream nextPut: each asString ] ] ].
 
-	packageRequirements := Dictionary new.
+	externalRequirements := Dictionary new.
+	primaryPackageRequirements := Dictionary new.
+	secondaryPackageRequirements := Dictionary new.
 	packageNames do: [ :each |
-		packageRequirements at: each asString put: Set new ].
+		externalRequirements at: each asString put: Set new.
+		primaryPackageRequirements at: each asString put: Set new.
+		secondaryPackageRequirements at: each asString put: Set new ].
 
 	relationGraph := StPackageRelationGraph onPackagesNamed: packageNames.
-	relationGraph build.
-	relationGraph packages do: [:aDAPackage |
-		aDAPackage dependencies do: [:each | 
-			self ensureRequire: each source to: each target ] ]
+"	relationGraph shouldComputeMessageSendDependencies: false. ""They dont produce loading errors""
+"	relationGraph build.
+	relationGraph packages do: [ :eachPackage |
+		eachPackage dependencies do: [ :eachDependency |
+			self ensureRequireDependency: eachDependency ] ].
 
+	self processDependencyCycles
+]
+
+{ #category : 'private' }
+BaselineBuilder >> processDependencyCycles [
+
+	| pendingPackageNames |
+	packageRequirementsProcessed := OrderedDictionary new.
+	pendingPackageNames := packageNames sorted.
+
+	[ pendingPackageNames isEmpty ] whileFalse: [ 
+		| rows chosenRow chosenPackageName ignoredRequirements |
+		rows := pendingPackageNames collect: [ :each |
+			{ each.
+			(primaryPackageRequirements at: each) reject: [ :req |
+				packageRequirementsProcessed includesKey: req ].
+			(secondaryPackageRequirements at: each) reject: [ :req |
+				packageRequirementsProcessed includesKey: req ] } ].
+		rows sort:
+			[ :row | row second size ] ascending,
+			[ :row | row third size ] ascending,
+			#asString ascending.
+		chosenRow := rows first. "Most prioritary"
+
+		chosenPackageName := chosenRow first. "Package name"
+		ignoredRequirements := chosenRow second, chosenRow third. "Requirements except ignored"
+
+		packageRequirementsProcessed
+			at: chosenPackageName
+			put: {
+				((externalRequirements at: chosenPackageName) |
+				((primaryPackageRequirements at: chosenPackageName) |
+				(secondaryPackageRequirements at: chosenPackageName)))
+					\ ignoredRequirements.
+				ignoredRequirements }.
+
+		pendingPackageNames := pendingPackageNames copyWithout: chosenPackageName ]
 ]
 
 { #category : 'accessing' }
-BaselineBuilder >> projectName: aString [ 
+BaselineBuilder >> projectName: aString [
+
 	projectName := aString.
-	self internalPackageNamesPrefix: aString.
+	self internalPackageNamesPrefix: aString
 ]
 
 { #category : 'private' }
 BaselineBuilder >> selectorForBaselineMethod [
+
 	^ 'baseline:'
 ]
 
 { #category : 'private' }
 BaselineBuilder >> selectorForExternalProject: aString [
-	^ 'declare{1}On:' format: {aString}
+
+	^ 'declare{1}On:' format: { self externalBaselineNameFor: aString }
 ]
 
 { #category : 'private' }
 BaselineBuilder >> sourceForBaselineMethod [
+
 	^ '{1} spec
 	<baseline>
+
 	spec
 		for: #common
 		do: [ {2}{3} ]' format: {
@@ -319,6 +402,7 @@ BaselineBuilder >> sourceForBaselineMethod [
 BaselineBuilder >> sourceForExternalProject: aString [
 
 	^ '{1} spec
+
 	spec
 		baseline: {2}
 		with: [ spec repository: {3} ]'
@@ -330,30 +414,36 @@ BaselineBuilder >> sourceForExternalProject: aString [
 
 { #category : 'private' }
 BaselineBuilder >> sourceForExternalProjectDeclarations [
-	externalProjectNames ifEmpty: [ ^'' ].
+
+	externalPackageNamePrefixes ifEmpty: [ ^ '' ].
 
 	^ String streamContents: [ :stream |
-		stream cr; tab; tab; tab; << 'self'; cr.
-		externalProjectNames sorted
+		stream cr; tab: 3; << 'self'; cr.
+		externalPackageNamePrefixes sorted
 			do: [ :each |
-				stream tab; tab; tab; tab; << (self selectorForExternalProject: each); << ' spec' ]
+				stream tab: 4; << (self selectorForExternalProject: each); << ' spec' ]
 			separatedBy: [
 				stream << ';'; cr ].
-		stream << '.'; cr.
-		]
+		stream << '.'; cr ]
 ]
 
 { #category : 'private' }
 BaselineBuilder >> sourceForPackageDeclarations [
+
 	^ String streamContents: [ :stream |
-		stream cr; tab; tab; tab; << 'spec'; cr.
-		packageNames sorted
-			do: [ :each |
-				stream tab; tab; tab; tab; << 'package: '; print: each.
-				(packageRequirements at: each) ifNotEmpty: [ :requirements |
-					stream << (' with: [ spec requires: {1} ]' format: { requirements asArray sorted }) ] ]
-			separatedBy: [
-				stream << ';'; cr ].
-		stream << '.'; cr.
-		]
+		packageRequirementsProcessed associations
+			do: [ :assoc |
+				assoc value second ifNotEmpty: [ :ignored |
+					stream
+						cr; tab: 3;
+						<< '"Cycles ignored '.
+					ignored asArray sorted printElementsOn: stream.
+					stream << '"' ].
+				stream cr; tab: 3; << 'spec'.
+				assoc value first asArray sorted
+					ifEmpty: [ stream << ' package: '; print: assoc key ]
+					ifNotEmpty: [ :requirements |
+						stream cr; tab: 4; << 'package: '; print: assoc key.
+						self printRequirements: requirements on: stream ] ]
+			separatedBy: [ stream << '.'; cr ] ]
 ]

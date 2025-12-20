@@ -1,17 +1,21 @@
 Class {
-	#name : #BaselineOfBaselineBuilder,
-	#superclass : #BaselineOf,
-	#category : #BaselineOfBaselineBuilder
+	#name : 'BaselineOfBaselineBuilder',
+	#superclass : 'BaselineOf',
+	#category : 'BaselineOfBaselineBuilder',
+	#package : 'BaselineOfBaselineBuilder'
 }
 
-{ #category : #baseline }
+{ #category : 'baseline' }
 BaselineOfBaselineBuilder >> baseline: spec [
 	<baseline>
 	spec
 		for: #common
 		do: [ 
 			spec
-				package: 'BaselineBuilder-Core';
-				package: 'BaselineBuilder-Tests'.
- ]
+				package: 'BaselineBuilder-Core'.
+			spec
+				package: 'BaselineBuilder-Tests';
+				package: 'BaselineBuilderStub-A';
+				package: 'BaselineBuilderStub-B';
+				package: 'BaselineBuilderStub-C' ]
 ]

@@ -49,6 +49,22 @@ BaselineBuilderTest >> test02OneExternalProject [
 ]
 
 { #category : 'tests' }
+BaselineBuilderTest >> test03Cycle [
+
+	| builtClass |
+	builder := BaselineBuilder new
+		projectName: 'BaselineBuilderStub';
+		externalProjectNames: #(Collections);
+		build;
+		yourself.
+	
+	builtClass := builder baselineClass.
+	
+	self assert: builtClass isClass.
+	self assert: builtClass selectors sorted equals: #(baseline: declareCollectionsOn:)
+]
+
+{ #category : 'tests' }
 BaselineBuilderTest >> testInstallMarkdownWith [
 
 	| markdown |
