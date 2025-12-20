@@ -48,11 +48,13 @@ Class {
 		'projectName',
 		'packageNames',
 		'baselineClass',
-		'packageRequirements',
 		'internalPackageNamesRegex',
 		'externalPackageNamePrefixes',
 		'packageRequirementsProcessed',
-		'baselineClassSuffix'
+		'baselineClassSuffix',
+		'primaryPackageRequirements',
+		'secondaryPackageRequirements',
+		'externalRequirements'
 	],
 	#category : 'BaselineBuilder-Core',
 	#package : 'BaselineBuilder-Core'
@@ -145,21 +147,22 @@ BaselineBuilder >> createBaselineClass [
 ]
 
 { #category : 'private' }
-BaselineBuilder >> ensureRequire: source to: target [
-	| sourcePackageName targetPackageName |
+BaselineBuilder >> ensureRequireDependency: aStPackageDependency [
+
+	| sourcePackageName |
+	sourcePackageName := aStPackageDependency source packageName asString.
+
 	self
-		parseTarget: target packageName
-		ifInternal: [ :name | targetPackageName := name ]
-		ifExternalProject: [ :name | targetPackageName := name ]
-		ifNone: [
-			"('Discarding dependency: {1} -> {2}'
-				format: {
-					source packageName.
-					target packageName }) traceCr."
-			^ self ].
+		parseTarget: aStPackageDependency target packageName
+		ifInternal: [ :name |
+			((aStPackageDependency causesLoadingError
+				ifTrue: [ primaryPackageRequirements ]
+				ifFalse: [ secondaryPackageRequirements ]) at: sourcePackageName) add: name ]
+		ifExternalProject: [ :name |
+			(externalRequirements at: sourcePackageName) add: name ]
+		ifNone: [ ^ self ].
 	
-	sourcePackageName := source packageName asString.
-	(packageRequirements at: sourcePackageName) add: targetPackageName
+
 ]
 
 { #category : 'private' }
@@ -299,7 +302,7 @@ BaselineBuilder >> printRequirements: requirements on: stream [
 			stream << ') ]' ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'private' }
 BaselineBuilder >> processDependencies [
 
 	| relationGraph |
@@ -308,16 +311,20 @@ BaselineBuilder >> processDependencies [
 			(self isInternal: each) ifTrue: [ 
 				stream nextPut: each asString ] ] ].
 
-	packageRequirements := Dictionary new.
+	externalRequirements := Dictionary new.
+	primaryPackageRequirements := Dictionary new.
+	secondaryPackageRequirements := Dictionary new.
 	packageNames do: [ :each |
-		packageRequirements at: each asString put: Set new ].
+		externalRequirements at: each asString put: Set new.
+		primaryPackageRequirements at: each asString put: Set new.
+		secondaryPackageRequirements at: each asString put: Set new ].
 
 	relationGraph := StPackageRelationGraph onPackagesNamed: packageNames.
-	"relationGraph shouldComputeMessageSendDependencies: false." "To reduce cycles"
-	relationGraph build.
+"	relationGraph shouldComputeMessageSendDependencies: false. ""They dont produce loading errors""
+"	relationGraph build.
 	relationGraph packages do: [ :eachPackage |
 		eachPackage dependencies do: [ :eachDependency |
-			self ensureRequire: eachDependency source to: eachDependency target ] ].
+			self ensureRequireDependency: eachDependency ] ].
 
 	self processDependencyCycles
 ]
@@ -330,24 +337,32 @@ BaselineBuilder >> processDependencyCycles [
 	pendingPackageNames := packageNames sorted.
 
 	[ pendingPackageNames isEmpty ] whileFalse: [ 
-		| packageNamesAndNumberOfCycles available reqsToIgnore |
-		packageNamesAndNumberOfCycles := pendingPackageNames collect: [ :each |
-			each -> ((packageRequirements at: each) select: [ :req |
-				(self isInternal: req) and: [
-				(packageRequirementsProcessed includesKey: req) not ] ]) ].
-		packageNamesAndNumberOfCycles sort:
-			[ :assoc | assoc value size ] ascending, #asString ascending.
+		| rows chosenRow chosenPackageName ignoredRequirements |
+		rows := pendingPackageNames collect: [ :each |
+			{ each.
+			(primaryPackageRequirements at: each) reject: [ :req |
+				packageRequirementsProcessed includesKey: req ].
+			(secondaryPackageRequirements at: each) reject: [ :req |
+				packageRequirementsProcessed includesKey: req ] } ].
+		rows sort:
+			[ :row | row second size ] ascending,
+			[ :row | row third size ] ascending,
+			#asString ascending.
+		chosenRow := rows first. "Most prioritary"
 
-		available := packageNamesAndNumberOfCycles first key.
-		reqsToIgnore := packageNamesAndNumberOfCycles first value.
+		chosenPackageName := chosenRow first. "Package name"
+		ignoredRequirements := chosenRow second, chosenRow third. "Requirements except ignored"
 
 		packageRequirementsProcessed
-			at: available
+			at: chosenPackageName
 			put: {
-				(packageRequirements at: available) \ reqsToIgnore.
-				reqsToIgnore }.
+				((externalRequirements at: chosenPackageName) |
+				((primaryPackageRequirements at: chosenPackageName) |
+				(secondaryPackageRequirements at: chosenPackageName)))
+					\ ignoredRequirements.
+				ignoredRequirements }.
 
-		pendingPackageNames := pendingPackageNames copyWithout: available ]
+		pendingPackageNames := pendingPackageNames copyWithout: chosenPackageName ]
 ]
 
 { #category : 'accessing' }
@@ -421,7 +436,7 @@ BaselineBuilder >> sourceForPackageDeclarations [
 				assoc value second ifNotEmpty: [ :ignored |
 					stream
 						cr; tab: 3;
-						<< '"Ignoring cycle with '.
+						<< '"Cycles ignored '.
 					ignored asArray sorted printElementsOn: stream.
 					stream << '"' ].
 				stream cr; tab: 3; << 'spec'.
