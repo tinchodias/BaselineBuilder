@@ -102,6 +102,36 @@ BaselineBuilder >> baselinePackageName [
 	^ 'BaselineOf', (projectName copyWithoutAll: '-')
 ]
 
+{ #category : 'private' }
+BaselineBuilder >> breakCyclesAndSortDependencies [
+
+	| sorted |
+	sorted := OrderedCollection new.
+	packageNames sort.
+
+	[ packageNames isEmpty ] whileFalse: [ 
+		| packageNamesAndNumberOfCycles available reqsToIgnore |
+		packageNamesAndNumberOfCycles := packageNames collect: [ :each |
+			each -> ((packageRequirements at: each) select: [ :req |
+				(self isInternal: req) and: [ (sorted includes: req) not ] ]) ].
+		packageNamesAndNumberOfCycles sort:
+			[ :assoc | assoc value size ] ascending, #asString ascending.
+
+		available := packageNamesAndNumberOfCycles first key.
+		reqsToIgnore := packageNamesAndNumberOfCycles first value.
+
+		sorted add: available.
+		packageNames := packageNames copyWithout: available.
+
+		reqsToIgnore ifNotEmpty: [
+			{#reqsToIgnore. available. reqsToIgnore} traceCr.
+			packageRequirements
+				at: available
+				update: [ :set | set removeAll: reqsToIgnore ] ] ].
+
+	packageNames := sorted
+]
+
 { #category : 'accessing' }
 BaselineBuilder >> browseBuiltBaselineClass [
 
@@ -234,6 +264,7 @@ BaselineBuilder >> internalPackageNamesRegex: aRegex [
 
 { #category : 'private' }
 BaselineBuilder >> isInternal: aPackageName [
+
 	^ internalPackageNamesRegex matches: aPackageName
 ]
 
@@ -305,8 +336,9 @@ BaselineBuilder >> processDependencies [
 	relationGraph build.
 	relationGraph packages do: [ :eachPackage |
 		eachPackage dependencies do: [ :eachDependency |
-			self ensureRequire: eachDependency source to: eachDependency target ] ]
+			self ensureRequire: eachDependency source to: eachDependency target ] ].
 
+	self breakCyclesAndSortDependencies
 ]
 
 { #category : 'accessing' }
@@ -375,7 +407,7 @@ BaselineBuilder >> sourceForExternalProjectDeclarations [
 BaselineBuilder >> sourceForPackageDeclarations [
 
 	^ String streamContents: [ :stream |
-		packageNames sorted
+		packageNames
 			do: [ :eachPackageName |
 				| requirementsArray |
 				stream cr; tab: 3; << 'spec'.
