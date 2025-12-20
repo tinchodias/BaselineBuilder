@@ -132,10 +132,7 @@ BaselineBuilder >> copyToClipboardInstallMarkdownWith: urlString [
 { #category : 'private' }
 BaselineBuilder >> createBaselineClass [
 
-	baselineClass :=
-		SystemVersion current major < 12
-			ifTrue: [ self newBaselineClassBeforePharo12 ]
-			ifFalse: [ self newBaselineClassSincePharo12 ].
+	baselineClass := self newBaselineClass.
 
 	baselineClass
 		compile: self sourceForBaselineMethod
@@ -261,17 +258,7 @@ BaselineBuilder >> isInternal: aPackageName [
 ]
 
 { #category : 'private' }
-BaselineBuilder >> newBaselineClassBeforePharo12 [
-
-	^ BaselineOf
-		subclass: self baselineClassName asSymbol
-		instanceVariableNames: ''
-		classVariableNames: ''
-		package: self baselinePackageName asString
-]
-
-{ #category : 'private' }
-BaselineBuilder >> newBaselineClassSincePharo12 [
+BaselineBuilder >> newBaselineClass [
 
 	^ BaselineOf classInstaller make: [ :builder |
 		  builder
