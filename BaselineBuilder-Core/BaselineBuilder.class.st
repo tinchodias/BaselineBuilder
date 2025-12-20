@@ -140,10 +140,14 @@ BaselineBuilder >> createBaselineClass [
 		compile: self sourceForBaselineMethod
 		classified: #baselines.
 
-	externalPackageNamePrefixes do: [ :each |
-		baselineClass
-			compile: (self sourceForExternalProject: each)
-			classified: #'external projects' ]
+	"Add declaration methods (unless they already exist)"
+	externalPackageNamePrefixes
+		reject: [ :each |
+			(baselineClass includesSelector: (self selectorForExternalProject: each) asSymbol) ]
+		thenDo: [ :each |
+			baselineClass
+				compile: (self sourceForExternalProject: each)
+				classified: #'external projects' ]
 ]
 
 { #category : 'private' }
