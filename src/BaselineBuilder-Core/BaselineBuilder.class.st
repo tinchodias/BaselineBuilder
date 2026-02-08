@@ -324,8 +324,8 @@ BaselineBuilder >> processDependencies [
 		secondaryPackageRequirements at: each asString put: Set new ].
 
 	relationGraph := StPackageRelationGraph onPackagesNamed: packageNames.
-"	relationGraph shouldComputeMessageSendDependencies: false. ""They dont produce loading errors""
-"	relationGraph build.
+"	relationGraph shouldComputeMessageSendDependencies: false." "They dont produce loading errors"
+	relationGraph build.
 	relationGraph packages do: [ :eachPackage |
 		eachPackage dependencies do: [ :eachDependency |
 			self ensureRequireDependency: eachDependency ] ].
